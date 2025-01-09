@@ -8,32 +8,43 @@ import {
   Button,
   Paper,
   IconButton,
-  Snackbar,
-  Alert,
+  Checkbox,
+  FormControlLabel,
 } from "@mui/material";
 import { ContentCopy as CopyIcon } from "@mui/icons-material";
+import toast, { Toaster } from "react-hot-toast";
 
 const App = () => {
   const [passwordLength, setPasswordLength] = useState(8);
   const [password, setPassword] = useState("");
-  const [isToastOpen, setIsToastOpen] = useState(false);
+  const [includeNumbers, setIncludeNumbers] = useState(true);
+  const [includeChars, setIncludeChars] = useState(true);
+  const [includeSpecial, setIncludeSpecial] = useState(true);
 
   const generatePassword = () => {
-    const characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+    if (!includeNumbers && !includeChars && !includeSpecial) {
+      toast.error("Please select at least one option!");
+      return;
+    }
+
+    let characters = "";
+    if (includeChars) characters += "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    if (includeNumbers) characters += "0123456789";
+    if (includeSpecial) characters += "!@#$%^&*()";
+
     let newPassword = "";
     for (let i = 0; i < passwordLength; i++) {
       newPassword += characters.charAt(Math.floor(Math.random() * characters.length));
     }
     setPassword(newPassword);
+    toast.success("Password generated!");
   };
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(password);
-    setIsToastOpen(true); 
-  };
-
-  const handleToastClose = () => {
-    setIsToastOpen(false);
+    if (password) {
+      navigator.clipboard.writeText(password);
+      toast.success("Password copied to clipboard!");
+    }
   };
 
   return (
@@ -49,6 +60,9 @@ const App = () => {
         boxSizing: "border-box",
       }}
     >
+      {/* Toast Notifications */}
+      <Toaster position="bottom-center" reverseOrder={false} />
+
       <Paper
         elevation={3}
         sx={{
@@ -65,8 +79,10 @@ const App = () => {
           Password Generator
         </Typography>
         <Typography variant="body1" gutterBottom>
-          Select password length and click "Generate"
+          Customize your password and click "Generate"
         </Typography>
+
+        {/* Password Length Slider */}
         <Box sx={{ my: 3 }}>
           <Typography gutterBottom>Password Length: {passwordLength}</Typography>
           <Slider
@@ -75,14 +91,44 @@ const App = () => {
             min={4}
             max={32}
             valueLabelDisplay="auto"
-            sx={{
-              '& .MuiSlider-thumb': {
-                transition: 'transform 0.3s ease-in-out',
-                ':hover': { transform: 'scale(1.2)' },
-              },
-            }}
           />
         </Box>
+
+        {/* Options for Numbers, Characters, Special Characters */}
+        <Box sx={{ textAlign: "left", mb: 2 }}>
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={includeNumbers}
+                onChange={(e) => setIncludeNumbers(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Include Numbers"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={includeChars}
+                onChange={(e) => setIncludeChars(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Include Letters"
+          />
+          <FormControlLabel
+            control={
+              <Checkbox
+                checked={includeSpecial}
+                onChange={(e) => setIncludeSpecial(e.target.checked)}
+                color="primary"
+              />
+            }
+            label="Include Special Characters"
+          />
+        </Box>
+
+        {/* Generate Password Button */}
         <Button
           variant="contained"
           color="primary"
@@ -90,11 +136,13 @@ const App = () => {
           sx={{
             marginBottom: 2,
             width: "100%",
-            fontSize: { xs: "0.9rem", sm: "1rem" }, 
+            fontSize: { xs: "0.9rem", sm: "1rem" },
           }}
         >
           Generate Password
         </Button>
+
+        {/* Password Field and Copy Button */}
         <Grid
           container
           alignItems="center"
@@ -107,38 +155,17 @@ const App = () => {
               fullWidth
               disabled
               placeholder="Generated password will appear here"
-              sx={{
-                fontSize: { xs: "0.8rem", sm: "1rem" }, 
-              }}
             />
           </Grid>
           <Grid item xs={2}>
             {password && (
-              <IconButton
-                color="primary"
-                onClick={copyToClipboard}
-                sx={{
-                  ':hover': { backgroundColor: "#e0f7fa" },
-                }}
-              >
+              <IconButton color="primary" onClick={copyToClipboard}>
                 <CopyIcon />
               </IconButton>
             )}
           </Grid>
         </Grid>
       </Paper>
-
-      {/* Snackbar for Toast Notification */}
-      <Snackbar
-        open={isToastOpen}
-        autoHideDuration={2000}
-        onClose={handleToastClose}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
-      >
-        <Alert onClose={handleToastClose} severity="success" sx={{ width: "100%" }}>
-          Password Copied!
-        </Alert>
-      </Snackbar>
     </Box>
   );
 };
